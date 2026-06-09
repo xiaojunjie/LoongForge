@@ -92,3 +92,5 @@ swanlog/
 *.prof
 nsys_*/
 nsight_*/
+outputs/
+examples/checkpoints/

@@ -20,7 +20,10 @@ from torch import Tensor
 
 logger = logging.getLogger(__name__)
 
-from transformer_engine.pytorch.attention import apply_rotary_pos_emb as te_apply_rotary_pos_emb
+try:
+    from transformer_engine.pytorch.attention import apply_rotary_pos_emb as te_apply_rotary_pos_emb
+except ImportError:
+    te_apply_rotary_pos_emb = None
 
 
 def _rotate_half(x: Tensor, rotary_interleaved: bool) -> Tensor:
@@ -98,14 +101,15 @@ def apply_rotary_pos_emb(
     """
 
     if config.apply_rope_fusion:
-        return te_apply_rotary_pos_emb(
-            t.unsqueeze(1),
-            freqs,
-            tensor_format="sbhd",
-            interleaved=rotary_interleaved,
-            fused=True,
-            mscale=mscale,
-        ).squeeze(1)
+        if te_apply_rotary_pos_emb is not None:
+            return te_apply_rotary_pos_emb(
+                t.unsqueeze(1),
+                freqs,
+                tensor_format="sbhd",
+                interleaved=rotary_interleaved,
+                fused=True,
+                mscale=mscale,
+            ).squeeze(1)
 
     return _apply_rotary_pos_emb_bshd(
         t.unsqueeze(1),
